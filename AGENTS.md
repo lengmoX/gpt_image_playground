@@ -134,3 +134,22 @@ git push origin feature/add-xxx
 ```
 
 > 私有定制功能（API Key、私有接口等）不要提交给原项目，保留在 `custom/main` 即可。
+
+---
+
+## 自定义功能状态：独立后端代理 (Custom API Proxy)
+
+**功能说明**：为了解决前端直连私有 API（如 `api.88code.pro` 和 `www.88code.pro`）产生的跨域 (CORS) 问题，同时规避 Cloudflare 的 100 秒超时限制，本项目在 `backend/` 目录下引入了一个独立的轻量级 Node.js 代理服务。
+
+**架构特点**：
+1. **白名单机制**：只有当用户填写的 API URL 命中 `VITE_CUSTOM_PROXY_DOMAINS`（如 `.env.local` 中配置）时，前端才会把请求转发到代理路径 `/custom-proxy/`。
+2. **安全性**：后端代理验证 `Referer` 来源，并严格限制只向白名单域名发起请求，防止被滥用为通用代理。
+3. **长连接支持**：Node.js 后端与 Vite 配置中均将代理超时设置为 10 分钟（600 秒），以支持 AI 绘画等耗时请求。
+4. **Cloudflare 限制**：**务必注意**，长时间的绘图请求不能经过 Cloudflare 代理（小黄云）。需在 Cloudflare 关掉被代理域名的云朵（DNS Only），让请求直达 Nginx，并在 Nginx 配置中增加 `proxy_read_timeout 600s;`。
+
+**代码合并注意事项**：
+为尽量避免与上游代码合并冲突：
+* 后端代理全部集中在独立的 `backend/` 目录下。
+* 核心代理判断工具函数单独放在 `src/lib/customProxy.ts`。
+* 前端仅在 `src/lib/openaiCompatibleImageApi.ts` 和 `vite.config.ts` 中做了极少量侵入性修改，并且全部由 `// xjs-custom-start: 自定义域名自动代理` 和 `// xjs-custom-end` 块状注释包裹。
+* 同步原项目代码发生冲突时，只要保留 `xjs-custom-start/end` 块内的逻辑即可。

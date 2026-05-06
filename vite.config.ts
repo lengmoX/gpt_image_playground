@@ -29,8 +29,19 @@ export default defineConfig(({ command }) => {
     },
     server: {
       host: true,
-      proxy:
-        devProxyConfig?.enabled
+      proxy: {
+        // xjs-custom-start: 自定义域名代理（开发环境转发到 backend 服务）
+        '/custom-proxy': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/custom-proxy/, ''),
+          // 图片生成最多等待10分钟
+          proxyTimeout: 600_000,
+          timeout: 600_000,
+        },
+        // xjs-custom-end
+        ...(devProxyConfig?.enabled
           ? {
               [devProxyConfig.prefix]: {
                 target: devProxyConfig.target,
@@ -43,7 +54,8 @@ export default defineConfig(({ command }) => {
                   ),
               },
             }
-          : undefined,
+          : {}),
+      },
     },
   }
 })

@@ -1,6 +1,9 @@
 import type { ApiProfile, ImageApiResponse, ResponsesApiResponse, TaskParams } from '../types'
 import { dataUrlToBlob, imageDataUrlToPngBlob, maskDataUrlToPngBlob } from './canvasImage'
 import { buildApiUrl, isApiProxyAvailable, readClientDevProxyConfig } from './devProxy'
+// xjs-custom-start: 自定义域名自动代理
+import { isCustomProxyDomain, buildCustomProxyTargetHeader, CUSTOM_PROXY_PREFIX } from './customProxy'
+// xjs-custom-end
 import {
   assertImageInputPayloadSize,
   assertMaskEditFileSize,
@@ -161,9 +164,17 @@ async function callImagesApiSingle(opts: CallApiOptions, profile: ApiProfile): P
     : originalPrompt
   const isEdit = inputImageDataUrls.length > 0
   const mime = MIME_MAP[params.output_format] || 'image/png'
-  const proxyConfig = readClientDevProxyConfig()
-  const useApiProxy = profile.apiProxy && isApiProxyAvailable(proxyConfig)
-  const requestHeaders = createRequestHeaders(profile)
+  // xjs-custom-start: 自定义域名自动代理
+  const isCustomDomain = isCustomProxyDomain(profile.baseUrl)
+  const proxyConfig = isCustomDomain
+    ? { prefix: CUSTOM_PROXY_PREFIX, enabled: true, target: '', changeOrigin: true, secure: false }
+    : readClientDevProxyConfig()
+  const useApiProxy = isCustomDomain || (profile.apiProxy && isApiProxyAvailable(proxyConfig))
+  const requestHeaders = {
+    ...createRequestHeaders(profile),
+    ...(isCustomDomain ? buildCustomProxyTargetHeader(profile.baseUrl) : {}),
+  }
+  // xjs-custom-end
 
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), profile.timeout * 1000)
@@ -338,9 +349,17 @@ async function callResponsesImageApi(opts: CallApiOptions, profile: ApiProfile):
 async function callResponsesImageApiSingle(opts: CallApiOptions, profile: ApiProfile): Promise<CallApiResult> {
   const { prompt, params, inputImageDataUrls } = opts
   const mime = MIME_MAP[params.output_format] || 'image/png'
-  const proxyConfig = readClientDevProxyConfig()
-  const useApiProxy = profile.apiProxy && isApiProxyAvailable(proxyConfig)
-  const requestHeaders = createRequestHeaders(profile)
+  // xjs-custom-start: 自定义域名自动代理
+  const isCustomDomain = isCustomProxyDomain(profile.baseUrl)
+  const proxyConfig = isCustomDomain
+    ? { prefix: CUSTOM_PROXY_PREFIX, enabled: true, target: '', changeOrigin: true, secure: false }
+    : readClientDevProxyConfig()
+  const useApiProxy = isCustomDomain || (profile.apiProxy && isApiProxyAvailable(proxyConfig))
+  const requestHeaders = {
+    ...createRequestHeaders(profile),
+    ...(isCustomDomain ? buildCustomProxyTargetHeader(profile.baseUrl) : {}),
+  }
+  // xjs-custom-end
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), profile.timeout * 1000)
 
