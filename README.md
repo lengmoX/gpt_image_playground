@@ -152,8 +152,8 @@ services:
 你可以在项目根目录新建 `.env.local` 文件配置默认 API URL（如 `VITE_DEFAULT_API_URL=https://api.openai.com/v1`）。然后安装依赖并启动：
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 **2. 本地开发跨域代理 (可选)**
@@ -164,12 +164,12 @@ npm run dev
 cp dev-proxy.config.example.json dev-proxy.config.json
 ```
 
-修改 `dev-proxy.config.json`，将 `target` 设置为真实的图片接口地址。重启开发服务器后，在页面设置中开启 **API 代理** 即可（请求将被转发如 `http://localhost:5173/api-proxy/... -> target/...`）。此功能仅在 `npm run dev` 阶段生效，不会影响打包产物。
+修改 `dev-proxy.config.json`，将 `target` 设置为真实的图片接口地址。重启开发服务器后，在页面设置中开启 **API 代理** 即可（请求将被转发如 `http://localhost:5173/api-proxy/... -> target/...`）。此功能仅在 `pnpm run dev` 阶段生效，不会影响打包产物。
 
 **3. 构建静态产物**
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 构建输出的文件位于 `dist/` 目录下，可将其部署至任何静态文件服务器（如普通 Nginx、GitHub Pages、Netlify 等）。
