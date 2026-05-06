@@ -1,3 +1,6 @@
 node_modules/
 dist/
 dev-proxy.config.json
+
+# custom: 使用 pnpm 管理依赖，忽略 npm lock 文件
+package-lock.json
